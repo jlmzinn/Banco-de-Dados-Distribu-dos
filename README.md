@@ -181,3 +181,32 @@ INNER JOIN remoto.nota_fiscal nf
 
 Para consultas frequentes, a melhor opção é o **postgres_fdw**. Como existe uma diferença significativa entre os links de rede (2 MB em Porto Velho e 512 kb em Seropédica), é importante minimizar a quantidade de dados trafegados. O postgres_fdw permite que o PostgreSQL otimize as consultas, enviando filtros e condições para serem executados diretamente no servidor remoto (*push-down de consultas*), reduzindo o volume de dados transmitidos pela rede. Além disso, ele oferece maior transparência, facilidade de manutenção e melhor desempenho quando comparado ao dblink, tornando-se a solução mais adequada para o ambiente distribuído da GEEK Commerce.
 
+# Questão 4 – Controle de Concorrência no PostgreSQL
+
+## a) Principais modos de bloqueio de tabela
+
+### ACCESS SHARE
+
+É o bloqueio mais leve do PostgreSQL e é adquirido automaticamente durante operações de leitura (SELECT). Permite que múltiplas consultas leiam a tabela simultaneamente, bloqueando apenas operações que exijam exclusividade total sobre a tabela.
+
+### ROW SHARE
+
+É utilizado em comandos como SELECT ... FOR UPDATE ou SELECT ... FOR SHARE. Permite a leitura dos dados enquanto reserva determinadas linhas para futuras atualizações, evitando conflitos entre transações concorrentes.
+
+### ROW EXCLUSIVE
+
+É adquirido automaticamente por operações que modificam dados, como INSERT, UPDATE e DELETE. Permite que outras transações realizem leituras na tabela, mas controla conflitos com outras operações de escrita.
+
+### SHARE
+
+É utilizado por operações que precisam ler a tabela garantindo que sua estrutura não seja alterada, como a criação de alguns índices. Permite consultas de leitura, mas restringe determinadas operações de modificação.
+
+### ACCESS EXCLUSIVE
+
+É o bloqueio mais restritivo do PostgreSQL. Nenhuma outra transação pode ler ou modificar a tabela enquanto esse bloqueio estiver ativo. É utilizado em operações como DROP TABLE, TRUNCATE e algumas alterações estruturais realizadas com ALTER TABLE.
+
+---
+
+## b) Diferença entre bloqueio de linha e bloqueio de tabela
+
+O bloqueio de linha afeta apenas os registros específicos que estão sendo manipulados por uma transação. Dessa forma, outros usuários podem continuar acessando e modificando linhas diferentes da mesma tabela, aumentando a concorrência e o desempenho do sistema. Já o bloqueio de tabela afeta a tabela inteira, impedindo ou restringindo que outras transações realizem determinadas operações sobre qualquer registro da tabela. Em ambientes com muitos usuários simultâneos, o bloqueio de linha é geralmente mais eficiente por permitir maior paralelismo, enquanto o bloqueio de tabela é utilizado quando é necessário garantir consistência em operações que afetam toda a estrutura ou grande parte dos dados.
