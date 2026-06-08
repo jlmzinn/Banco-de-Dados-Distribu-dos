@@ -210,3 +210,22 @@ Para consultas frequentes, a melhor opção é o **postgres_fdw**. Como existe u
 ## b) Diferença entre bloqueio de linha e bloqueio de tabela
 
 O bloqueio de linha afeta apenas os registros específicos que estão sendo manipulados por uma transação. Dessa forma, outros usuários podem continuar acessando e modificando linhas diferentes da mesma tabela, aumentando a concorrência e o desempenho do sistema. Já o bloqueio de tabela afeta a tabela inteira, impedindo ou restringindo que outras transações realizem determinadas operações sobre qualquer registro da tabela. Em ambientes com muitos usuários simultâneos, o bloqueio de linha é geralmente mais eficiente por permitir maior paralelismo, enquanto o bloqueio de tabela é utilizado quando é necessário garantir consistência em operações que afetam toda a estrutura ou grande parte dos dados.
+
+# Questão 5 – Deadlock no PostgreSQL
+
+## a) O que é um deadlock em banco de dados?
+
+Um deadlock ocorre quando duas ou mais transações ficam bloqueadas indefinidamente, esperando que a outra libere um recurso. Por exemplo, a Transação A bloqueia a Tabela 1 e tenta acessar a Tabela 2, enquanto a Transação B bloqueia a Tabela 2 e tenta acessar a Tabela 1. Como ambas aguardam a liberação do recurso pela outra transação, nenhuma consegue continuar sua execução.
+
+---
+
+## b) Como o PostgreSQL detecta e resolve um deadlock?
+
+O PostgreSQL monitora constantemente as dependências entre transações que estão aguardando bloqueios. Quando identifica um ciclo de espera entre duas ou mais transações, caracteriza a situação como um deadlock. Para resolver o problema, o sistema escolhe uma das transações envolvidas como vítima, cancela sua execução e realiza um rollback das alterações ainda não confirmadas. Após a liberação dos recursos bloqueados, as demais transações podem continuar normalmente. O erro retornado ao usuário é geralmente **"deadlock detected"**.
+
+---
+
+## c) Boa prática para evitar deadlocks
+
+Uma das principais boas práticas é garantir que todas as transações acessem tabelas e registros sempre na mesma ordem. Por exemplo, se uma aplicação precisa acessar as tabelas **produto** e **nota_fiscal**, todas as transações devem primeiro acessar **produto** e depois **nota_fiscal**. Essa padronização reduz significativamente a possibilidade de ciclos de espera entre transações e, consequentemente, a ocorrência de deadlocks.
+
