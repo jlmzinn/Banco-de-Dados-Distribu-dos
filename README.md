@@ -229,3 +229,55 @@ O PostgreSQL monitora constantemente as dependências entre transações que est
 
 Uma das principais boas práticas é garantir que todas as transações acessem tabelas e registros sempre na mesma ordem. Por exemplo, se uma aplicação precisa acessar as tabelas **produto** e **nota_fiscal**, todas as transações devem primeiro acessar **produto** e depois **nota_fiscal**. Essa padronização reduz significativamente a possibilidade de ciclos de espera entre transações e, consequentemente, a ocorrência de deadlocks.
 
+# Questão 6 – Uso do EXPLAIN no PostgreSQL
+
+## a) O que é o comando EXPLAIN e qual sua finalidade?
+
+O comando **EXPLAIN** é utilizado para exibir o plano de execução que o PostgreSQL pretende utilizar para executar uma consulta SQL. Sua principal finalidade é auxiliar na análise de desempenho e na otimização de consultas, permitindo identificar como o banco acessa os dados, quais métodos de varredura são utilizados (Seq Scan, Index Scan, Hash Join, entre outros) e qual o custo estimado de cada operação. Com essas informações, o administrador pode detectar gargalos e criar índices ou reescrever consultas para melhorar a performance.
+
+---
+
+## b) Interpretação do plano de execução
+
+### Plano apresentado
+
+```sql
+QUERY PLAN
+->  Hash Join  (cost=1.14..114.20 rows=1000 width=32)
+      Hash Cond: (vendas.produto_id = produto.id)
+      ->  Seq Scan on vendas  (cost=0.00..45.00 rows=3000 width=16)
+      ->  Hash  (cost=1.10..1.10 rows=10 width=16)
+            ->  Seq Scan on produto  (cost=0.00..1.10 rows=10 width=16)
+                  Filter: (categoria = 'Eletrônicos')
+```
+
+### Passo a passo da execução
+
+1. O PostgreSQL inicia realizando um **Seq Scan** (varredura sequencial) na tabela **produto**.
+
+2. Durante essa leitura, aplica o filtro:
+
+```sql
+categoria = 'Eletrônicos'
+```
+
+Selecionando apenas os produtos pertencentes à categoria "Eletrônicos".
+
+3. Os registros encontrados são armazenados em uma estrutura de memória chamada **Hash**, criando uma tabela hash baseada no campo **produto.id**.
+
+4. Em seguida, o PostgreSQL executa um **Seq Scan** na tabela **vendas**, percorrendo aproximadamente 3.000 registros.
+
+5. Para cada registro da tabela **vendas**, o sistema consulta a tabela hash criada anteriormente e verifica a condição:
+
+```sql
+vendas.produto_id = produto.id
+```
+
+6. Quando encontra correspondência entre os valores, realiza o **Hash Join**, combinando os dados das tabelas **vendas** e **produto**.
+
+7. O resultado final é retornado com uma estimativa de aproximadamente 1.000 linhas.
+
+### Análise do plano
+
+O PostgreSQL escolheu o **Hash Join** porque a tabela **produto**, após a aplicação do filtro, possui poucos registros (cerca de 10 linhas), tornando eficiente a criação da tabela hash em memória. Já a tabela **vendas** é percorrida integralmente através de um **Seq Scan**, possivelmente porque não existe um índice adequado ou porque o otimizador considerou a leitura completa mais vantajosa para a quantidade de dados existente.
+
