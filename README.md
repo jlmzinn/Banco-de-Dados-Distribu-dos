@@ -79,3 +79,22 @@ As notas fiscais são geradas localmente em cada região e apresentam cresciment
 A solução proposta busca equilibrar desempenho, disponibilidade e eficiência da rede. As tabelas **Produto** e **Sexo** utilizam **Replicação Total**, pois possuem baixo custo de sincronização e alta necessidade de acesso em todos os sites. Já as tabelas **Cliente** e **Nota Fiscal** utilizam **Fragmentação Horizontal**, reduzindo o tráfego de dados entre filiais e melhorando o desempenho das consultas regionais.
 
 Essa abordagem é adequada para o cenário da GEEK Commerce, especialmente devido às limitações de largura de banda dos links via satélite presentes em algumas filiais.
+
+# Questão 2 – Justificativa Técnica das Escolhas
+
+## Cliente – Fragmentação Horizontal
+
+A tabela Cliente foi distribuída utilizando fragmentação horizontal porque possui um grande volume de registros e cada filial tende a acessar principalmente os clientes de sua própria região. Como os sites de Seropédica/RJ e Teofilândia/BA possuem links de baixa velocidade (512 kb e 256 kb via satélite), manter os dados dos clientes localmente reduz o tráfego de rede e melhora o desempenho das consultas. Além disso, a atualização dos dados ocorre com frequência moderada, tornando a fragmentação mais eficiente do que a replicação completa, que geraria um custo elevado de sincronização entre os sites.
+
+## Produto – Replicação Total
+
+A tabela Produto foi definida com replicação total porque o catálogo de produtos precisa estar disponível em todas as filiais para consultas e operações de venda. Embora existam atualizações ocasionais de preços, descrições ou estoque, a frequência dessas alterações é menor que a frequência de consultas realizadas pelos usuários. Como o volume de dados é relativamente controlado, o custo de replicação é aceitável e garante alta disponibilidade das informações, evitando dependência constante dos links de rede entre as unidades.
+
+## Sexo – Replicação Total
+
+A tabela Sexo é pequena, possui poucos registros e sofre raríssimas atualizações. Dessa forma, a replicação total apresenta um custo praticamente irrelevante de armazenamento e sincronização. Além disso, a disponibilidade dos dados em todos os sites facilita a execução de relatórios, análises estatísticas e campanhas de marketing sem necessidade de acesso remoto a outras filiais, melhorando a eficiência do sistema distribuído.
+
+## Nota Fiscal – Fragmentação Horizontal
+
+A tabela Nota Fiscal foi distribuída por fragmentação horizontal devido ao seu alto volume de registros e à grande frequência de inserções realizadas diariamente pelas filiais de vendas. Cada unidade gera suas próprias notas fiscais, tornando mais eficiente armazená-las localmente. Essa estratégia reduz significativamente o tráfego de dados nos links de menor largura de banda, especialmente nos sites conectados por satélite. Além disso, evita o alto custo de processamento e replicação que seria necessário caso todas as notas fiscais fossem mantidas sincronizadas em todos os locais.
+
