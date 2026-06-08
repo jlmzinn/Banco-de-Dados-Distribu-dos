@@ -96,5 +96,88 @@ A tabela Sexo é pequena, possui poucos registros e sofre raríssimas atualizaç
 
 ## Nota Fiscal – Fragmentação Horizontal
 
+
 A tabela Nota Fiscal foi distribuída por fragmentação horizontal devido ao seu alto volume de registros e à grande frequência de inserções realizadas diariamente pelas filiais de vendas. Cada unidade gera suas próprias notas fiscais, tornando mais eficiente armazená-las localmente. Essa estratégia reduz significativamente o tráfego de dados nos links de menor largura de banda, especialmente nos sites conectados por satélite. Além disso, evita o alto custo de processamento e replicação que seria necessário caso todas as notas fiscais fossem mantidas sincronizadas em todos os locais.
+
+# Questão 3 – Acesso Distribuído entre Bancos PostgreSQL
+
+## a) Conceitos de dblink e postgres_fdw
+
+O **dblink** é uma extensão do PostgreSQL que permite executar consultas em um banco de dados remoto por meio de uma conexão direta. As consultas são realizadas através de funções específicas e o resultado é retornado para o banco local. Embora seja simples de configurar, exige que o desenvolvedor escreva consultas mais complexas e trate explicitamente a conexão remota.
+
+O **postgres_fdw** (Foreign Data Wrapper) é uma solução mais moderna que permite acessar tabelas remotas como se fossem tabelas locais. Ele cria tabelas estrangeiras (*foreign tables*) no banco local, possibilitando o uso de comandos SQL normais, incluindo JOINs, filtros e consultas otimizadas pelo planejador de execução do PostgreSQL. Dessa forma, oferece melhor desempenho e maior transparência para o usuário.
+
+---
+
+## b) Passo a passo para acessar a tabela nota_fiscal de Seropédica a partir de Porto Velho
+
+### 1. Habilitar a extensão postgres_fdw
+
+```sql
+CREATE EXTENSION IF NOT EXISTS postgres_fdw;
+```
+
+### 2. Criar o servidor remoto
+
+```sql
+CREATE SERVER servidor_seropedica
+FOREIGN DATA WRAPPER postgres_fdw
+OPTIONS (
+    host 'ip_seropedica',
+    dbname 'geek_commerce',
+    port '5432'
+);
+```
+
+### 3. Criar o mapeamento de usuário
+
+```sql
+CREATE USER MAPPING FOR CURRENT_USER
+SERVER servidor_seropedica
+OPTIONS (
+    user 'usuario_remoto',
+    password 'senha_remota'
+);
+```
+
+### 4. Criar um schema para as tabelas remotas
+
+```sql
+CREATE SCHEMA remoto;
+```
+
+### 5. Importar a tabela nota_fiscal
+
+```sql
+IMPORT FOREIGN SCHEMA public
+LIMIT TO (nota_fiscal)
+FROM SERVER servidor_seropedica
+INTO remoto;
+```
+
+### 6. Realizar consultas como se a tabela fosse local
+
+```sql
+SELECT *
+FROM remoto.nota_fiscal;
+```
+
+### 7. Exemplo de JOIN entre produto (local) e nota_fiscal (remota)
+
+```sql
+SELECT
+    p.id_produto,
+    p.nome,
+    nf.id_nota,
+    nf.valor_total
+FROM produto p
+INNER JOIN remoto.nota_fiscal nf
+    ON p.id_produto = nf.id_produto;
+```
+
+---
+
+## c) Método recomendado para consultas frequentes
+
+Para consultas frequentes, a melhor opção é o **postgres_fdw**. Como existe uma diferença significativa entre os links de rede (2 MB em Porto Velho e 512 kb em Seropédica), é importante minimizar a quantidade de dados trafegados. O postgres_fdw permite que o PostgreSQL otimize as consultas, enviando filtros e condições para serem executados diretamente no servidor remoto (*push-down de consultas*), reduzindo o volume de dados transmitidos pela rede. Além disso, ele oferece maior transparência, facilidade de manutenção e melhor desempenho quando comparado ao dblink, tornando-se a solução mais adequada para o ambiente distribuído da GEEK Commerce.
 
