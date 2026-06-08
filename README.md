@@ -1,44 +1,80 @@
-# Banco-de-Dados-Distribu-dos
-Cenário: GEEK Commerce
-Uma proposta adequada para a GEEK Commerce, considerando a localização das filiais, a largura de banda limitada dos links via satélite e o perfil de uso de cada tabela, seria:
+# GEEK Commerce – Estratégia de Banco de Dados Distribuído
 
-Tabela	Técnica escolhida
-Cliente	Fragmentação Horizontal
-Produto	Replicação Total
-Sexo	Replicação Total
-Nota Fiscal	Fragmentação Horizontal
-(alternativamente: Cliente pode usar Fragmentação Híbrida, dependendo do detalhamento exigido)	
-Justificativas
+## Descrição do Cenário
 
-Cliente – Fragmentação Horizontal
+A GEEK Commerce é uma varejista online que possui quatro filiais distribuídas pelo Brasil, cada uma com características específicas de rede e responsabilidades operacionais.
 
-Os clientes podem ser distribuídos por região (Sudeste, Nordeste, Norte etc.).
-Cada filial acessa principalmente os clientes de sua área de atuação.
-Reduz o tráfego nos links de baixa velocidade e melhora o desempenho das consultas locais.
+| Site   | Localização      | Link de Rede      | Observação                          |
+| ------ | ---------------- | ----------------- | ----------------------------------- |
+| Site 1 | Porto Velho/RO   | 2 MB              | Matriz – Dados estratégicos         |
+| Site 2 | Seropédica/RJ    | 512 kb (satélite) | Vendas e notas fiscais – Sudeste    |
+| Site 3 | Teofilândia/BA   | 256 kb (satélite) | Vendas e notas fiscais – Nordeste   |
+| Site 4 | Guajará-Mirim/RO | 1 MB              | Marketing e inteligência de negócio |
 
-Produto – Replicação Total
+As principais tabelas do sistema são:
 
-O catálogo de produtos precisa estar disponível em todas as filiais para consultas e vendas.
-As alterações são relativamente menos frequentes do que as consultas.
-Garante alta disponibilidade e rapidez de acesso.
+* Cliente
+* Produto
+* Sexo
+* Nota Fiscal
 
-Sexo – Replicação Total
+---
 
-É uma tabela pequena e praticamente estática.
-O custo de replicação é muito baixo.
-Facilita consultas de marketing e relatórios em qualquer unidade.
+# Estratégia de Distribuição dos Dados
 
-Nota Fiscal – Fragmentação Horizontal
+## Tabela Cliente
 
-Cada filial gera suas próprias notas fiscais.
-O volume de dados é elevado e cresce constantemente.
-Manter as notas fiscais localmente reduz o tráfego de rede, especialmente nos links de 256 kb e 512 kb.
-Consultas operacionais são realizadas principalmente pela própria filial que gerou a venda.
-Resposta pronta para entrega
-Tabela	Técnica escolhida
-Cliente	Fragmentação Horizontal
-Produto	Replicação Total
-Sexo	Replicação Total
-Nota Fiscal	Fragmentação Horizontal
+**Técnica escolhida:** Fragmentação Horizontal
 
-Justificativa: As tabelas Produto e Sexo possuem poucos dados e são amplamente consultadas, tornando a replicação total a melhor opção. Já Cliente e Nota Fiscal possuem grande volume de registros e forte vínculo regional, sendo mais eficiente distribuí-las por fragmentação horizontal para reduzir tráfego de rede e melhorar o desempenho das operações locais.
+### Justificativa
+
+A tabela de clientes possui grande volume de registros e pode ser dividida por região geográfica. Dessa forma, cada filial acessa principalmente os clientes de sua área de atuação, reduzindo o tráfego entre os sites e melhorando o desempenho das consultas.
+
+---
+
+## Tabela Produto
+
+**Técnica escolhida:** Replicação Total
+
+### Justificativa
+
+O catálogo de produtos precisa estar disponível em todas as filiais para consultas e operações de venda. Como as atualizações são menos frequentes que as consultas, a replicação total garante acesso rápido e alta disponibilidade dos dados.
+
+---
+
+## Tabela Sexo
+
+**Técnica escolhida:** Replicação Total
+
+### Justificativa
+
+Trata-se de uma tabela pequena e praticamente estática. O custo de replicação é mínimo, permitindo que todas as filiais realizem consultas e análises de marketing sem necessidade de comunicação constante pela rede.
+
+---
+
+## Tabela Nota Fiscal
+
+**Técnica escolhida:** Fragmentação Horizontal
+
+### Justificativa
+
+As notas fiscais são geradas localmente em cada região e apresentam crescimento constante. A fragmentação horizontal permite armazenar os registros próximos de onde são produzidos, reduzindo o tráfego nos links de comunicação e aumentando a eficiência das operações.
+
+---
+
+# Resumo das Técnicas Aplicadas
+
+| Tabela      | Técnica Escolhida       |
+| ----------- | ----------------------- |
+| Cliente     | Fragmentação Horizontal |
+| Produto     | Replicação Total        |
+| Sexo        | Replicação Total        |
+| Nota Fiscal | Fragmentação Horizontal |
+
+---
+
+# Conclusão
+
+A solução proposta busca equilibrar desempenho, disponibilidade e eficiência da rede. As tabelas **Produto** e **Sexo** utilizam **Replicação Total**, pois possuem baixo custo de sincronização e alta necessidade de acesso em todos os sites. Já as tabelas **Cliente** e **Nota Fiscal** utilizam **Fragmentação Horizontal**, reduzindo o tráfego de dados entre filiais e melhorando o desempenho das consultas regionais.
+
+Essa abordagem é adequada para o cenário da GEEK Commerce, especialmente devido às limitações de largura de banda dos links via satélite presentes em algumas filiais.
