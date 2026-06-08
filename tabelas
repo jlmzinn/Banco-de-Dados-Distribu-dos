@@ -8,14 +8,14 @@ CREATE TABLE nota_fiscal (
 -- Fragmento Sudeste
 CREATE TABLE nota_fiscal_sudeste (
     CHECK (regiao = 'SUDESTE')
-) INHERITS (nota_fiscal)
+) INHERITS (nota_fiscal);
 
 -- Fragmento Nordeste
 CREATE TABLE nota_fiscal_nordeste (
     CHECK (regiao = 'NORDESTE')
-) INHERITS (nota_fiscal)
+) INHERITS (nota_fiscal);
 
 -- Fragmento Norte
 CREATE TABLE nota_fiscal_norte (
     CHECK (regiao = 'NORTE')
-) INHERITS (nota_fiscal)
+) INHERITS (nota_fiscal);
