@@ -1,0 +1,21 @@
+CREATE TABLE nota_fiscal (
+    id_nota SERIAL PRIMARY KEY,
+    data_venda DATE,
+    valor_total NUMERIC(10,2),
+    regiao VARCHAR(20)
+);
+
+-- Fragmento Sudeste
+CREATE TABLE nota_fiscal_sudeste (
+    CHECK (regiao = 'SUDESTE')
+) INHERITS (nota_fiscal);
+
+-- Fragmento Nordeste
+CREATE TABLE nota_fiscal_nordeste (
+    CHECK (regiao = 'NORDESTE')
+) INHERITS (nota_fiscal);
+
+-- Fragmento Norte
+CREATE TABLE nota_fiscal_norte (
+    CHECK (regiao = 'NORTE')
+) INHERITS (nota_fiscal);
